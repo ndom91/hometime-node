@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsx index.ts",
+    "tsc": "tsc"
   },
   "keywords": [],
   "author": "ndom91 <yo@ndo.dev> (https://ndo.dev/)",
@@ -16,30 +17,33 @@
     "eslint-plugin-prettier": "^4.2.1",
     "lint-staged": "^13.2.2",
     "prettier": "^2.8.8",
-    "simple-git-hooks": "^2.8.1"
+    "simple-git-hooks": "^2.8.1",
+    "tsx": "^3.12.7",
+    "typescript": "^5.0.4"
   },
   "eslintConfig": {
+    "parserOptions": {
+      "sourceType": "module"
+    },
     "extends": [
       "eslint:recommended",
       "prettier"
     ],
     "env": {
-      "browser": true,
       "node": true,
-      "es6": true
+      "esnext": true
     },
     "plugins": [
       "prettier"
     ],
     "rules": {
-      "prettier/prettier": "error",
+      "prettier/prettier": "error"
     }
   },
   "prettier": {
     "semi": false
   },
   "simple-git-hooks": {
-    "commit-msg": "npx commitlint --edit",
     "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
@@ -49,5 +53,9 @@
     "*.{js,jsx}": [
       "eslint --fix"
     ]
+  },
+  "dependencies": {
+    "@googleapis/calendar": "^6.0.0",
+    "wled-client": "^0.22.1"
   }
 }
