@@ -1,0 +1,53 @@
+{
+  "name": "hometime_node",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "ndom91 <yo@ndo.dev> (https://ndo.dev/)",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.40.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "lint-staged": "^13.2.2",
+    "prettier": "^2.8.8",
+    "simple-git-hooks": "^2.8.1"
+  },
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended",
+      "prettier"
+    ],
+    "env": {
+      "browser": true,
+      "node": true,
+      "es6": true
+    },
+    "plugins": [
+      "prettier"
+    ],
+    "rules": {
+      "prettier/prettier": "error",
+    }
+  },
+  "prettier": {
+    "semi": false
+  },
+  "simple-git-hooks": {
+    "commit-msg": "npx commitlint --edit",
+    "pre-commit": "npx lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,css,json}": [
+      "prettier --write"
+    ],
+    "*.{js,jsx}": [
+      "eslint --fix"
+    ]
+  }
+}
