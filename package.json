@@ -6,6 +6,7 @@
   "scripts": {
     "prepare": "npx simple-git-hooks",
     "dev": "tsx watch src/index.ts",
+    "devcal": "node src/calendar.cjs",
     "lint": "eslint --ext .js,.ts .",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
     "build": "tsc"
@@ -21,6 +22,8 @@
   "dependencies": {
     "@google-cloud/local-auth": "^2.1.1",
     "@googleapis/calendar": "^6.0.0",
+    "date-fns": "^2.30.0",
+    "dotenv": "^16.0.3",
     "googleapis": "^118.0.0",
     "wled-client": "^0.22.1"
   },
