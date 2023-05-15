@@ -8,6 +8,8 @@ import { Auth, google, calendar_v3 } from "googleapis"
 import { insertNewEventAtTime, convertToTimezoneISOString } from './helpers.ts'
 import type { EventsToday } from './types.ts'
 
+const brightnessMultiplier = 1.0 // between 0.0 - 1.0
+
 const useWled = async (host?: string) => {
   if (!host && !process.env.WLED_HOST) {
     console.error('No host defined, exiting')
@@ -27,7 +29,7 @@ const useWled = async (host?: string) => {
       console.debug('Setting segments:', segments)
       wled.updateState({
         on: true,
-        // brightness: 100,
+        // brightness: brightnessMultiplier * 100,
         // mainSegmentId: 0,
         segments
       })
@@ -74,13 +76,11 @@ const getEventsToday = (list: calendar_v3.Schema$Events): EventsToday[] => {
 const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDClientSegment[] => {
   const nonEventSegment: WLEDClientSegment = {
     start: 0,
-    stop: 0,
-    // colors: [[40, 90, 40]],
     effectId: 65, // 12
-    effectSpeed: 1,
-    effectIntensity: 1,
+    effectSpeed: 150, // 0 - 255
+    effectIntensity: 1, // 0 - 255
     paletteId: 45, // 28
-    brightness: 40,
+    brightness: brightnessMultiplier * 40,
   }
 
   // SPECIAL SEGMENTS
@@ -90,8 +90,8 @@ const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDCl
   const events1 = insertNewEventAtTime({
     events: eventsToday,
     dateTime: new Date(),
-    color: [[120, 0, 0], [0, 120, 0], [0, 0, 120]],
-    brightness: 255,
+    color: [[120, 0, 0], [0, 120, 0]],
+    brightness: brightnessMultiplier * 255,
     // color: [[120, 0, 0], [0, 0, 120]],
     effect: {
       effectId: 12,
@@ -101,20 +101,20 @@ const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDCl
     }
   })
 
-  // START OF WORK DAY
+  // 2. START OF WORK DAY
   const events2 = insertNewEventAtTime({
     events: events1,
     dateTime: set(new Date(), { hours: 09, minutes: 0 }),
-    brightness: 255,
+    brightness: brightnessMultiplier * 255,
     // color: [[175, 175, 90]]
     color: [[120, 0, 0]],
   })
 
-  // END OF WORK DAY
+  // 3. END OF WORK DAY
   const allEventsToday = insertNewEventAtTime({
     events: events2,
-    dateTime: set(new Date(), { hours: 17, minutes: 30 }),
-    brightness: 255,
+    dateTime: set(new Date(), { hours: 19, minutes: 30 }),
+    brightness: brightnessMultiplier * 255,
     // color: [[175, 175, 90]]
     color: [[120, 0, 0]],
   })
