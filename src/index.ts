@@ -18,30 +18,23 @@ const useWled = async (host?: string) => {
   await wled.init()
 
   const methods = {
+    state: wled.state,
+    info: wled.info,
     clear: async () => {
       await wled.clearSegments()
     },
-
-    state: wled.state,
-    info: wled.info,
-
+    updateSegments: async (segments: WLEDClientSegment[]) => {
+      console.debug('Setting segments:', segments)
+      wled.updateState({
+        on: true,
+        brightness: 100,
+        mainSegmentId: 0,
+        segments
+      })
+    },
     updateRaw: async (state: WLEDClientSegment) => {
       console.debug('Setting state:', JSON.stringify(state, null, 2))
       wled.updateState(state)
-
-      // wled.updateState({
-      //   on: true,
-      //   brightness: 255,
-      //   mainSegmentId: 0,
-      //   segments: [
-      //     {
-      //       effectId: 0,
-      //       colors: [[255, 255, 255]],
-      //       start: 0,
-      //       stop: wled.info.leds.count
-      //     }
-      //   ]
-      // })
     }
   }
   return methods
@@ -78,11 +71,15 @@ const getEventsToday = (list: calendar_v3.Schema$Events): EventsToday[] => {
   })
 }
 
-const constructSegments = (eventsToday: EventsToday[]): WLEDClientSegment[] => {
+const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDClientSegment[] => {
   const nonEventSegment: WLEDClientSegment = {
     start: 0,
-    offset: 0,
-    colors: [[196, 182, 112]],
+    stop: 0,
+    colors: [[40, 90, 40]],
+    effectId: 0,
+    effectSpeed: 0,
+    effectIntensity: 0,
+    paletteId: 0,
   }
 
   const eventsTodaySegments: WLEDClientSegment[] = eventsToday.map(event => {
@@ -92,25 +89,44 @@ const constructSegments = (eventsToday: EventsToday[]): WLEDClientSegment[] => {
       start: ledsToStartTime,
       stop: ledsToStartTime + ledsLength + 1, // Stop is non-inclusive
       colors: [[39, 62, 163]],
+      effectId: 0,
+      effectSpeed: 0,
+      effectIntensity: 0,
+      paletteId: 0,
     }
   })
 
   console.log('eventsTodaySegments', eventsTodaySegments)
 
   // Interleave events array with "empty color" segments
-  return eventsTodaySegments.reduce((result, element, index, array) => {
-    result.push(element);
-    if (index < array.length - 1) {
-      result.push(nonEventSegment);
-    }
-    if (index === array.length - 1) {
-      result.push(nonEventSegment);
-    }
-    if (index !== 0) {
-      // result.start = 0
-    }
-    return result;
-  }, [nonEventSegment])
+  return eventsTodaySegments
+    .reduce((result, element, index, array) => {
+      result.push(element);
+      if (index < array.length - 1) {
+        result.push(structuredClone(nonEventSegment))
+      }
+      if (index === array.length - 1) {
+        result.push(structuredClone(nonEventSegment))
+      }
+      return result;
+    }, [structuredClone(nonEventSegment)])
+    .map((element, index, array) => {
+      if (element.start === 0) {
+        if (index === 0) {
+          // First element in array
+          element.stop = array[index + 1].start
+        } else if (index === array.length - 1) {
+          // Last element in array
+          element.start = array[index - 1].stop
+          element.stop = maxCount
+        } else {
+          // Rest of elements
+          element.start = (array[index - 1]?.stop || 0)
+          element.stop = array[index + 1].start
+        }
+      }
+      return element
+    })
 
 }
 
@@ -130,16 +146,11 @@ try {
   })
 
   const eventsToday = getEventsToday(list.data)
+  console.log('eventsToday', eventsToday)
 
-  // console.log('EVENTSTODAY', eventsToday)
+  const segments = constructSegments(eventsToday, wled.info.leds.count ?? 100)
 
-  const segments = constructSegments(eventsToday)
-  console.log('SEGMENTS', segments)
-
-  // await wled.updateRaw({
-  //   start: 0,
-  //   brightness: 32
-  // })
+  await wled.updateSegments(segments)
 } catch (error) {
   console.error(`[ERR] ${error}`)
 }
