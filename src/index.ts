@@ -1,13 +1,11 @@
 await import("dotenv/config")
+// eslint-disable-next-line
+// @ts-expect-error
+import { authorize } from "./calendar.cjs"
 import { differenceInMinutes, formatISO, isToday, set, startOfToday } from 'date-fns'
 import { WLEDClient, WLEDClientSegment } from 'wled-client'
 import { Auth, google, calendar_v3 } from "googleapis"
 import { insertNewEventAtTime, convertToTimezoneISOString } from './helpers.ts'
-// eslint-disable-next-line
-// @ts-expect-error
-import { authorize } from "./calendar.cjs"
-// import { useSegments } from './segment-constants.ts'
-
 import type { EventsToday } from './types.ts'
 
 const useWled = async (host?: string) => {
@@ -17,6 +15,7 @@ const useWled = async (host?: string) => {
   }
   const wled = new WLEDClient(host ?? process.env.WLED_HOST ?? '')
   await wled.init()
+  // console.log("WLED STATE", JSON.stringify(wled.state, null, 2))
 
   const methods = {
     state: wled.state,
@@ -77,11 +76,11 @@ const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDCl
     start: 0,
     stop: 0,
     // colors: [[40, 90, 40]],
-    effectId: 2,
+    effectId: 65, // 12
     effectSpeed: 1,
     effectIntensity: 1,
-    paletteId: 28,
-    brightness: 80,
+    paletteId: 45, // 28
+    brightness: 40,
   }
 
   // SPECIAL SEGMENTS
@@ -108,7 +107,7 @@ const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDCl
     dateTime: set(new Date(), { hours: 09, minutes: 0 }),
     brightness: 255,
     // color: [[175, 175, 90]]
-    color: [[0, 120, 0]],
+    color: [[120, 0, 0]],
   })
 
   // END OF WORK DAY
@@ -117,7 +116,7 @@ const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDCl
     dateTime: set(new Date(), { hours: 17, minutes: 30 }),
     brightness: 255,
     // color: [[175, 175, 90]]
-    color: [[0, 120, 0]],
+    color: [[120, 0, 0]],
   })
 
   console.debug('ALL EVENTS TODAY', allEventsToday)
@@ -171,8 +170,6 @@ const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDCl
 try {
   const wled = await useWled()
   const calendar: calendar_v3.Calendar = await useCalendar()
-  // const { TRACE_FULL } = useSegments(wled.info) // DEBUGGING TRACER EFFECT
-  // console.log("WLED STATE", JSON.stringify(wled.state, null, 2))
 
   const list = await calendar.events.list({
     calendarId: 'primary',
