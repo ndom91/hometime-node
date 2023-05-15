@@ -1,11 +1,12 @@
 await import("dotenv/config")
-import { differenceInMinutes, formatISO, isToday, startOfToday } from 'date-fns'
-import { RGBColor, WLEDClient, WLEDClientSegment } from 'wled-client'
+import { differenceInMinutes, formatISO, isToday, set, startOfToday } from 'date-fns'
+import { WLEDClient, WLEDClientSegment } from 'wled-client'
 import { Auth, google, calendar_v3 } from "googleapis"
+import { insertNewEventAtTime, convertToTimezoneISOString } from './helpers.ts'
 // eslint-disable-next-line
 // @ts-expect-error
 import { authorize } from "./calendar.cjs"
-import { useSegments } from './segment-constants.ts'
+// import { useSegments } from './segment-constants.ts'
 
 import type { EventsToday } from './types.ts'
 
@@ -27,13 +28,13 @@ const useWled = async (host?: string) => {
       console.debug('Setting segments:', segments)
       wled.updateState({
         on: true,
-        brightness: 100,
-        mainSegmentId: 0,
+        // brightness: 100,
+        // mainSegmentId: 0,
         segments
       })
     },
     updateRaw: async (state: WLEDClientSegment) => {
-      console.debug('Setting state:', JSON.stringify(state, null, 2))
+      // console.debug('Setting state:', JSON.stringify(state, null, 2))
       wled.updateState(state)
     }
   }
@@ -65,8 +66,8 @@ const getEventsToday = (list: calendar_v3.Schema$Events): EventsToday[] => {
   ).map((event) => {
     return {
       name: event.summary,
-      startTime: event.start.dateTime,
-      endTime: event.end.dateTime
+      startTime: convertToTimezoneISOString(new Date(event.start.dateTime)),
+      endTime: convertToTimezoneISOString(new Date(event.end.dateTime))
     }
   })
 }
@@ -75,28 +76,65 @@ const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDCl
   const nonEventSegment: WLEDClientSegment = {
     start: 0,
     stop: 0,
-    colors: [[40, 90, 40]],
-    effectId: 0,
-    effectSpeed: 0,
-    effectIntensity: 0,
-    paletteId: 0,
+    // colors: [[40, 90, 40]],
+    effectId: 2,
+    effectSpeed: 1,
+    effectIntensity: 1,
+    paletteId: 28,
+    brightness: 80,
   }
 
-  const eventsTodaySegments: WLEDClientSegment[] = eventsToday.map(event => {
-    const ledsToStartTime = differenceInMinutes(new Date(event.startTime), startOfToday()) / 15
-    const ledsLength = differenceInMinutes(new Date(event.endTime), new Date(event.startTime)) / 15
-    return {
-      start: ledsToStartTime,
-      stop: ledsToStartTime + ledsLength + 1, // Stop is non-inclusive
-      colors: [[39, 62, 163]],
-      effectId: 0,
-      effectSpeed: 0,
-      effectIntensity: 0,
-      paletteId: 0,
+  // SPECIAL SEGMENTS
+  // https://kno.wled.ge/features/effects/
+
+  // 1. NOW segment
+  const events1 = insertNewEventAtTime({
+    events: eventsToday,
+    dateTime: new Date(),
+    color: [[120, 0, 0], [0, 120, 0], [0, 0, 120]],
+    brightness: 255,
+    // color: [[120, 0, 0], [0, 0, 120]],
+    effect: {
+      effectId: 12,
+      //   effectSpeed: 26,
+      //   effectIntensity: 156,
+      //   // paletteId: 11
     }
   })
 
-  console.log('eventsTodaySegments', eventsTodaySegments)
+  // START OF WORK DAY
+  const events2 = insertNewEventAtTime({
+    events: events1,
+    dateTime: set(new Date(), { hours: 09, minutes: 0 }),
+    brightness: 255,
+    // color: [[175, 175, 90]]
+    color: [[0, 120, 0]],
+  })
+
+  // END OF WORK DAY
+  const allEventsToday = insertNewEventAtTime({
+    events: events2,
+    dateTime: set(new Date(), { hours: 17, minutes: 30 }),
+    brightness: 255,
+    // color: [[175, 175, 90]]
+    color: [[0, 120, 0]],
+  })
+
+  console.debug('ALL EVENTS TODAY', allEventsToday)
+
+  const eventsTodaySegments: WLEDClientSegment[] = allEventsToday.map(event => {
+    const ledsToStartTime = differenceInMinutes(new Date(event.startTime), startOfToday(), { roundingMethod: 'ceil' }) / 15
+    const ledsLength = differenceInMinutes(new Date(event.endTime), new Date(event.startTime), { roundingMethod: 'ceil' }) / 15
+    return {
+      start: Math.floor(ledsToStartTime),
+      stop: Math.floor(ledsToStartTime + ledsLength + 1),
+      colors: event.color ?? [[200, 30, 30]],
+      effectId: event.effectId ?? 0,
+      effectSpeed: event.effectSpeed ?? 0,
+      effectIntensity: event.effectIntensity ?? 0,
+      paletteId: event.paletteId ?? 0,
+    }
+  })
 
   // Interleave events array with "empty color" segments
   return eventsTodaySegments
@@ -117,7 +155,7 @@ const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDCl
           element.stop = array[index + 1].start
         } else if (index === array.length - 1) {
           // Last element in array
-          element.start = array[index - 1].stop
+          element.start = (array[index - 1].stop || 0)
           element.stop = maxCount
         } else {
           // Rest of elements
@@ -134,7 +172,6 @@ try {
   const wled = await useWled()
   const calendar: calendar_v3.Calendar = await useCalendar()
   // const { TRACE_FULL } = useSegments(wled.info) // DEBUGGING TRACER EFFECT
-
   // console.log("WLED STATE", JSON.stringify(wled.state, null, 2))
 
   const list = await calendar.events.list({
@@ -146,8 +183,6 @@ try {
   })
 
   const eventsToday = getEventsToday(list.data)
-  console.log('eventsToday', eventsToday)
-
   const segments = constructSegments(eventsToday, wled.info.leds.count ?? 100)
 
   await wled.updateSegments(segments)
