@@ -1,6 +1,6 @@
 await import("dotenv/config")
 import { GoogleAuth } from 'google-auth-library'
-import { Auth, google, calendar_v3 } from "googleapis"
+import { google, calendar_v3 } from "googleapis"
 import { WLEDClient, WLEDClientSegment } from 'wled-client'
 import { differenceInMinutes, formatISO, isToday, set, startOfToday } from 'date-fns'
 import { insertNewEventAtTime, convertToTimezoneISOString } from './helpers.ts'
@@ -47,6 +47,8 @@ const useCalendar = async () => {
     keyFilename: 'pufendorf-hometime-d41200cb0df3.json',
     scopes: ['https://www.googleapis.com/auth/calendar.readonly'] // Add required scopes for the APIs you plan to use
   })
+
+  // @ts-expect-error
   const client: GoogleAuth<JSONClient> = await auth.getClient();
 
   // const auth: Auth.OAuth2Client = await authorize()
@@ -99,12 +101,10 @@ const constructSegments = (eventsToday: EventsToday[], maxCount: number): WLEDCl
     color: [[120, 0, 0], [0, 120, 0]],
     brightness: brightnessMultiplier * 255,
     // color: [[120, 0, 0], [0, 0, 120]],
-    effect: {
-      effectId: 12,
-      //   effectSpeed: 26,
-      //   effectIntensity: 156,
-      //   // paletteId: 11
-    }
+    effectId: 12,
+    //   effectSpeed: 26,
+    //   effectIntensity: 156,
+    //   // paletteId: 11
   })
 
   // 2. START OF WORK DAY

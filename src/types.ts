@@ -1,3 +1,5 @@
+import { WLEDClientSegment } from 'wled-client'
+
 declare type RGBColor = [number, number, number];
 declare type RGBWColor = [number, number, number, number];
 
@@ -15,15 +17,9 @@ export interface EventsToday {
   paletteId?: number
 }
 
-export interface InsertEventArgs {
+export interface InsertEventArgs extends WLEDClientSegment {
   events: EventsToday[]
   dateTime: Date
   color?: SegmentColor
-  brightness?: number
-  effect?: {
-    effectId?: number
-    effectSpeed?: number
-    effectIntensity?: number
-    paletteId?: number
-  }
+  start?: number | undefined
 }

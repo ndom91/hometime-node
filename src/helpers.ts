@@ -12,13 +12,16 @@ export const convertToTimezoneISOString = (date: Date) => {
   return out
 }
 
-export function insertNewEventAtTime({ events, dateTime, color, brightness, effect }: InsertEventArgs): EventsToday[] {
+export function insertNewEventAtTime({ events, dateTime, color, brightness, effectId, effectSpeed, effectIntensity, paletteId }: InsertEventArgs): EventsToday[] {
   const newEvent = {
     color: color ?? [[120, 0, 0]],
     startTime: convertToTimezoneISOString(new Date(roundToNearestMinutes(dateTime, { roundingMethod: 'trunc', nearestTo: 15 }))),
     endTime: convertToTimezoneISOString(new Date(subMinutes(roundToNearestMinutes(dateTime, { roundingMethod: 'ceil', nearestTo: 15 }), 10))),
     brightness: brightness ?? 50,
-    ...(effect ?? {})
+    effectId,
+    effectIntensity,
+    effectSpeed,
+    paletteId
   } as EventsToday;
 
   for (let i = 0; i < events.length; i++) {
