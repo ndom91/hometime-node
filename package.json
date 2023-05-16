@@ -24,6 +24,7 @@
     "@googleapis/calendar": "^6.0.0",
     "date-fns": "^2.30.0",
     "dotenv": "^16.0.3",
+    "google-auth-library": "^8.8.0",
     "googleapis": "^118.0.0",
     "wled-client": "^0.22.1"
   },

@@ -25,3 +25,4 @@ dist-ssr
 
 google_oauth_client.json
 token.json
+pufendorf-*.json

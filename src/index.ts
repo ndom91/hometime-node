@@ -1,12 +1,12 @@
 await import("dotenv/config")
-// eslint-disable-next-line
-// @ts-expect-error
-import { authorize } from "./calendar.cjs"
-import { differenceInMinutes, formatISO, isToday, set, startOfToday } from 'date-fns'
-import { WLEDClient, WLEDClientSegment } from 'wled-client'
+import { GoogleAuth } from 'google-auth-library'
 import { Auth, google, calendar_v3 } from "googleapis"
+import { WLEDClient, WLEDClientSegment } from 'wled-client'
+import { differenceInMinutes, formatISO, isToday, set, startOfToday } from 'date-fns'
 import { insertNewEventAtTime, convertToTimezoneISOString } from './helpers.ts'
+
 import type { EventsToday } from './types.ts'
+import { JSONClient } from 'google-auth-library/build/src/auth/googleauth.js'
 
 const brightnessMultiplier = 1.0 // between 0.0 - 1.0
 
@@ -43,8 +43,14 @@ const useWled = async (host?: string) => {
 }
 
 const useCalendar = async () => {
-  const auth: Auth.OAuth2Client = await authorize()
-  return google.calendar({ version: 'v3', auth });
+  const auth = new GoogleAuth({
+    keyFilename: 'pufendorf-hometime-d41200cb0df3.json',
+    scopes: ['https://www.googleapis.com/auth/calendar.readonly'] // Add required scopes for the APIs you plan to use
+  })
+  const client: GoogleAuth<JSONClient> = await auth.getClient();
+
+  // const auth: Auth.OAuth2Client = await authorize()
+  return google.calendar({ version: 'v3', auth: client });
 }
 
 interface ValidDate extends calendar_v3.Schema$Event {
