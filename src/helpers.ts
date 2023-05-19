@@ -1,5 +1,6 @@
 import { formatISO, subMinutes, roundToNearestMinutes } from "date-fns"
 import type { EventsToday, InsertEventArgs } from "./types.ts"
+import { endOfToday, startOfToday } from "date-fns"
 
 export const sleep = (timeout: number) =>
   new Promise((res) => setTimeout(res, timeout))
@@ -69,4 +70,18 @@ export function insertNewEventAtTime({
   events.push(newEvent)
 
   return events
+}
+
+export const getStartOfToday = (): Date => {
+  const now = new Date()
+  const offsetInMinutes = now.getTimezoneOffset()
+  const startAtTimezoneOffset = startOfToday()
+  return new Date(startAtTimezoneOffset.getTime() - offsetInMinutes * 60 * 1000)
+}
+
+export const getEndOfToday = (): Date => {
+  const now = new Date()
+  const offsetInMinutes = now.getTimezoneOffset()
+  const endOfTimezoneOffset = endOfToday()
+  return new Date(endOfTimezoneOffset.getTime() - offsetInMinutes * 60 * 1000)
 }

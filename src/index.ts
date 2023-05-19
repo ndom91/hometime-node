@@ -9,13 +9,29 @@ import {
   set,
   startOfToday,
 } from "date-fns"
-import { insertNewEventAtTime, convertToTimezoneISOString } from "./helpers.ts"
+
+import {
+  insertNewEventAtTime,
+  convertToTimezoneISOString,
+  getEndOfToday,
+  getStartOfToday,
+} from "./helpers.ts"
 
 import type { EventsToday } from "./types.ts"
 import { JSONClient } from "google-auth-library/build/src/auth/googleauth.js"
 
 const isProd = process.env.NODE_ENV === "production"
 const brightnessMultiplier = 1.0 // between 0.0 - 1.0
+
+const wledCount = 100
+const ledStartTime = getStartOfToday()
+const ledEndTime = getEndOfToday()
+
+// 1 LED = ${resolution} minutes
+const resolution = Math.ceil(
+  (ledEndTime.getTime() - ledStartTime.getTime()) / 1000 / 60 / wledCount
+)
+// console.log('RES1', resolution)
 
 const useWled = async (host?: string) => {
   if (!host && !process.env.WLED_HOST) {
@@ -24,8 +40,8 @@ const useWled = async (host?: string) => {
   }
   const wled = new WLEDClient(host ?? process.env.WLED_HOST ?? "")
   await wled.init()
-  !isProd &&
-    console.debug("** WLED State: ", JSON.stringify(wled.state, null, 2))
+  // !isProd &&
+  // console.debug("** WLED State: ", JSON.stringify(wled.state, null, 2))
 
   return {
     state: wled.state,
@@ -37,8 +53,8 @@ const useWled = async (host?: string) => {
       !isProd && console.debug("** Setting segments:", segments)
       wled.updateState({
         on: true,
-        // brightness: brightnessMultiplier * 100,
-        // mainSegmentId: 0,
+        brightness: brightnessMultiplier * 100,
+        mainSegmentId: 0,
         segments,
       })
     },
@@ -127,7 +143,7 @@ const constructSegments = (
   // 2. START OF WORK DAY
   allEventsToday = insertNewEventAtTime({
     events: allEventsToday,
-    start: set(new Date(), { hours: 09, minutes: 0 }),
+    start: set(new Date(), { hours: 11, minutes: 0 }),
     brightness: brightnessMultiplier * 255,
     // color: [[175, 175, 90]]
     color: [[120, 0, 0]],
@@ -142,20 +158,20 @@ const constructSegments = (
     color: [[120, 0, 0]],
   })
 
-  !isProd && console.debug("** ALL RAW EVENTS TODAY: ", allEventsToday)
+  // !isProd && console.debug("** ALL RAW EVENTS TODAY: ", allEventsToday)
 
   const eventsTodaySegments: WLEDClientSegment[] = allEventsToday.map(
     (event) => {
       const ledsToStartTime =
         differenceInMinutes(new Date(event.startTime), startOfToday(), {
           roundingMethod: "ceil",
-        }) / 15
+        }) / resolution
       const ledsLength =
         differenceInMinutes(
           new Date(event.endTime),
           new Date(event.startTime),
           { roundingMethod: "ceil" }
-        ) / 15
+        ) / resolution
       return {
         start: Math.floor(ledsToStartTime),
         stop: Math.floor(ledsToStartTime + ledsLength + 1),
@@ -205,6 +221,7 @@ const constructSegments = (
 const main = async (): Promise<void> => {
   try {
     const wled = await useWled()
+    // console.log('** STATE', wled.state)
     const calendar: calendar_v3.Calendar = await useCalendar()
 
     const list = await calendar.events.list({
@@ -218,11 +235,16 @@ const main = async (): Promise<void> => {
     const eventsToday = getEventsToday(list.data)
     const segments = constructSegments(eventsToday, wled.info.leds.count ?? 100)
 
-    console.log("Updating WLED segments", new Date().toISOString())
+    // console.log("Updating WLED segments", new Date().toISOString())
+    console.log("Updating WLED segments", segments)
     await wled.updateSegments(segments)
   } catch (error) {
     console.error(`[ERR] ${error}`)
   }
+}
+
+if (process.argv.includes("main")) {
+  main()
 }
 
 export { main }
