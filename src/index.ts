@@ -34,7 +34,7 @@ const useWled = async (host?: string) => {
       await wled.clearSegments()
     },
     updateSegments: async (segments: WLEDClientSegment[]) => {
-      console.debug("** Setting segments:", segments)
+      !isProd && console.debug("** Setting segments:", segments)
       wled.updateState({
         on: true,
         // brightness: brightnessMultiplier * 100,
@@ -218,7 +218,7 @@ const main = async (): Promise<void> => {
     const eventsToday = getEventsToday(list.data)
     const segments = constructSegments(eventsToday, wled.info.leds.count ?? 100)
 
-    console.log("Updating WLED segments")
+    console.log("Updating WLED segments", new Date().toISOString())
     await wled.updateSegments(segments)
   } catch (error) {
     console.error(`[ERR] ${error}`)
