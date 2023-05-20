@@ -1,7 +1,8 @@
 import { CronJob } from "cron"
 import { main as runCalendar } from "./src/index.ts"
+import { log } from "./src/logger.ts"
 
-console.log("Start cron daemon")
+log.info("Starting cron daemon")
 new CronJob(
   "*/15 * * * *",
   runCalendar,

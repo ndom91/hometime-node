@@ -1,4 +1,4 @@
-import { formatISO, subMinutes, roundToNearestMinutes } from "date-fns"
+import { formatISO, roundToNearestMinutes } from "date-fns"
 import type { EventsToday, InsertEventArgs } from "./types.ts"
 import { endOfToday, startOfToday } from "date-fns"
 
@@ -32,12 +32,9 @@ export function insertNewEventAtTime({
     ),
     endTime: convertToTimezoneISOString(
       new Date(
-        // subMinutes(
         roundToNearestMinutes(start, {
           nearestTo: resolution,
         })
-        //   10
-        // )
       )
     ),
     brightness: brightness ?? 50,

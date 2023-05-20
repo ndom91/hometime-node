@@ -5,8 +5,9 @@
   "author": "Nico Domino <yo@ndo.dev>",
   "scripts": {
     "dev": "tsx watch src/index.ts main",
-    "start": "NODE_ENV=production tsx index.ts",
-    "lint": "eslint --ext .js,.ts .",
+    "dev:debug": "DEBUG=1 tsx watch src/index.ts main",
+    "start": "tsx index.ts",
+    "lint": "eslint --ext .js,.ts src",
     "build": "tsc",
     "prepare": "npx simple-git-hooks"
   },

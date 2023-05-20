@@ -21,11 +21,16 @@ import {
 import type { EventsToday } from "./types.ts"
 import { JSONClient } from "google-auth-library/build/src/auth/googleauth.js"
 
+if (process.env.DEBUG) {
+  log.enableAll()
+} else {
+  log.setLevel("INFO")
+}
+
 // ***********************
 // *      VARIABLES
 // ***********************
 
-const isProd = process.env.NODE_ENV === "production"
 const brightnessMultiplier = 1.0 // between 0.0-1.0
 const dryRun = false
 const wledCount = 100
@@ -63,7 +68,7 @@ const useWled = async (host?: string) => {
   }
   const wled = new WLEDClient(host ?? process.env.WLED_HOST ?? "")
   await wled.init()
-  !isProd && log.debug("** WLED State: ", JSON.stringify(wled.state, null, 2))
+  log.debug("** WLED State: ", JSON.stringify(wled.state, null, 2))
 
   return {
     state: wled.state,
@@ -72,7 +77,7 @@ const useWled = async (host?: string) => {
       await wled.clearSegments()
     },
     updateSegments: async (segments: WLEDClientSegment[]) => {
-      !isProd && log.debug("Setting segments:", segments)
+      log.debug("Setting segments:", segments)
       wled.updateState({
         on: true,
         brightness: brightnessMultiplier * 100,
@@ -81,7 +86,7 @@ const useWled = async (host?: string) => {
       })
     },
     updateRaw: async (state: WLEDClientSegment) => {
-      !isProd && log.debug("** Setting state:", JSON.stringify(state, null, 2))
+      log.debug("** Setting state:", JSON.stringify(state, null, 2))
       wled.updateState(state)
     },
   }
@@ -182,7 +187,7 @@ const constructSegments = (
     color: [[120, 0, 0]],
   })
 
-  !isProd && log.debug("RAW EVENTS TODAY: ", allEventsToday)
+  log.debug("RAW EVENTS TODAY: ", allEventsToday)
 
   const eventsTodaySegments: WLEDClientSegment[] = allEventsToday.map(
     (event) => {
