@@ -13,7 +13,10 @@ specifiers:
   eslint-config-prettier: ^8.8.0
   google-auth-library: ^8.8.0
   googleapis: ^118.0.0
+  kleur: ^4.1.5
   lint-staged: ^13.2.2
+  loglevel: ^1.8.1
+  loglevel-plugin-prefix: ^0.8.4
   prettier: ^2.8.8
   simple-git-hooks: ^2.8.1
   tsx: ^3.12.7
@@ -27,6 +30,9 @@ dependencies:
   dotenv: 16.0.3
   google-auth-library: 8.8.0
   googleapis: 118.0.0
+  kleur: 4.1.5
+  loglevel: 1.8.1
+  loglevel-plugin-prefix: 0.8.4
   wled-client: 0.22.1
 
 devDependencies:
@@ -1373,6 +1379,11 @@ packages:
       safe-buffer: 5.2.1
     dev: false
 
+  /kleur/4.1.5:
+    resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
+    engines: {node: '>=6'}
+    dev: false
+
   /levn/0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
@@ -1448,6 +1459,15 @@ packages:
       slice-ansi: 4.0.0
       wrap-ansi: 6.2.0
     dev: true
+
+  /loglevel-plugin-prefix/0.8.4:
+    resolution: {integrity: sha512-WpG9CcFAOjz/FtNht+QJeGpvVl/cdR6P0z6OcXSkr8wFJOsV2GRj2j10JLfjuA4aYkcKCNIEqRGCyTife9R8/g==}
+    dev: false
+
+  /loglevel/1.8.1:
+    resolution: {integrity: sha512-tCRIJM51SHjAayKwC+QAg8hT8vg6z7GSgLJKGvzuPb1Wc+hLzqtuVLxp6/HzSPOozuK+8ErAhy7U/sVzw8Dgfg==}
+    engines: {node: '>= 0.6.0'}
+    dev: false
 
   /lru-cache/6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}

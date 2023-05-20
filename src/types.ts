@@ -18,6 +18,7 @@ export interface EventsToday {
 }
 
 export interface InsertEventArgs extends Omit<WLEDClientSegment, "start"> {
+  resolution: number
   events: EventsToday[]
   color?: SegmentColor
   start: Date
