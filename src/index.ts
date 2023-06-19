@@ -44,8 +44,8 @@ const ledEndTime = set(new Date(), { hours: 22, minutes: 0 })
 log.debug("DAY START", ledStartTime)
 log.debug("DAY END", ledEndTime)
 
-const startOfWorkDay = set(new Date(), { hours: 11, minutes: 0 })
-const endOfWorkDay = set(new Date(), { hours: 19, minutes: 30 })
+const startOfWorkDay = set(new Date(), { hours: 9, minutes: 0 })
+const endOfWorkDay = set(new Date(), { hours: 18, minutes: 30 })
 
 // 1 LED = ${resolution} minutes
 const resolution = Math.ceil(
@@ -95,7 +95,12 @@ const useWled = async (host?: string) => {
 const useCalendar = async () => {
   const auth = new GoogleAuth({
     keyFilename: "pufendorf-hometime-d41200cb0df3.json",
-    scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+    scopes: [
+      "https://www.googleapis.com/auth/calendar.readonly",
+      "https://www.googleapis.com/auth/calendar.events.readonly",
+      "https://www.googleapis.com/auth/calendar",
+      "https://www.googleapis.com/auth/calendar.events",
+    ],
   })
 
   // @ts-expect-error
@@ -137,17 +142,17 @@ const constructSegments = (
   eventsToday: EventsToday[],
   maxCount: number
 ): WLEDClientSegment[] => {
+  // SPECIAL SEGMENTS
+  // https://kno.wled.ge/features/effects/
   const nonEventSegment: WLEDClientSegment = {
     start: 0,
     effectId: 65, // 12
-    effectSpeed: 150, // 0-255
-    effectIntensity: 1, // 0-255
+    effectSpeed: 50, // 0-255
+    effectIntensity: 10, // 0-255
     paletteId: 45, // 28
     brightness: brightnessMultiplier * 40,
   }
 
-  // SPECIAL SEGMENTS
-  // https://kno.wled.ge/features/effects/
   let allEventsToday
 
   // 1. NOW segment
@@ -253,15 +258,17 @@ const main = async (): Promise<void> => {
     const calendar: calendar_v3.Calendar = await useCalendar()
 
     const list = await calendar.events.list({
-      calendarId: "primary",
+      // calendarId: "primary",
+      calendarId: "nico@checklyhq.com",
       timeMin: formatISO(startOfToday()),
       maxResults: 15,
       singleEvents: true,
       orderBy: "startTime",
     })
+    log.info("list", list.data)
 
     const eventsToday = getEventsToday(list.data)
-    log.debug("Events Today", eventsToday)
+    log.info("Events Today", eventsToday)
 
     const segments = constructSegments(eventsToday, wled.info.leds.count ?? 100)
 
